@@ -8,6 +8,8 @@
 
 <h1 id="nomeConvidado">Carregando...</h1>
 
+<p id="info"></p>
+
 <button id="btnConfirmar">Confirmar presença</button>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -25,6 +27,7 @@
     console.log('id: ', convidadoId);
 
     const nomeEl = document.getElementById("nomeConvidado");
+    const infoEl = document.getElementById("info");
     const btnConfirmar = document.getElementById("btnConfirmar");
 
     if (!convidadoId) {
@@ -46,7 +49,12 @@
             return;
         }
 
-        nomeEl.innerText = `Olá, ${data.nome}`; 
+        nomeEl.innerText = `Olá, ${data.nome}`;
+        if(data.qtdAdultos + data.qtdCriancas > 1){
+            infoEl.innerText = `Vocês estão sendo convidados para o nosso casamento`;
+        } else {
+            infoEl.innerText = `Você está sendo convidado para o nosso casamento`;
+        }
 
         if (data.confirmacao) {
             btnConfirmar.innerText = "Presença já confirmada";
