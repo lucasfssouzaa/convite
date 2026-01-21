@@ -69,7 +69,7 @@
             .from("convidados")
             .update({
                 confirmacao: true,
-                dataConfirmacao: new Date().toISOString()
+                dataConfirmacao: agoraEmIsoLocal()
             })
             .eq("id", convidadoId);
 
@@ -85,6 +85,12 @@
     btnConfirmar.addEventListener("click", confirmarPresenca);
 
     carregarConvidado();
+
+    function agoraEmIsoLocal() {
+        const agora = new Date();
+        const offsetMs = agora.getTimezoneOffset() * 60000;
+        return new Date(agora.getTime() - offsetMs).toISOString();
+    }
 </script>
 
 </body>
