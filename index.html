@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Convite</title>
+</head>
+<body>
+
+<h1 id="nomeConvidado">Carregando...</h1>
+
+<button id="btnConfirmar">Confirmar presença</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = "https://mtwabudrvpdkmayuqfsb.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10d2FidWRydnBka21heXVxZnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMjA4NTYsImV4cCI6MjA4NDU5Njg1Nn0.Mao-afziGNwwtIRR_gYQ2HvmVYa0VT9luutZE2P41kM";
+
+    const supabaseClient = supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+    const params = new URLSearchParams(window.location.search);
+    const convidadoId = params.get("id");
+    console.log('id: ', convidadoId);
+
+    const nomeEl = document.getElementById("nomeConvidado");
+    const btnConfirmar = document.getElementById("btnConfirmar");
+
+    if (!convidadoId) {
+        nomeEl.innerText = "Convite inválido";
+        btnConfirmar.disabled = true;
+        throw new Error("ID não informado");
+    }
+
+    async function carregarConvidado() {
+        const { data, error } = await supabaseClient
+            .from("convidados")
+            .select("*")
+            .eq("id", convidadoId)
+            .single();
+
+        if (error || !data) {
+            nomeEl.innerText = "Convidado não encontrado";
+            btnConfirmar.disabled = true;
+            return;
+        }
+
+        nomeEl.innerText = `Olá, ${data.nome}`; 
+
+        if (data.confirmacao) {
+            btnConfirmar.innerText = "Presença já confirmada";
+            btnConfirmar.disabled = true;
+        }
+    }
+
+    async function confirmarPresenca() {
+        btnConfirmar.disabled = true;
+
+        const { error } = await supabaseClient
+            .from("convidados")
+            .update({
+                confirmacao: true,
+                dataConfirmacao: new Date().toISOString()
+            })
+            .eq("id", convidadoId);
+
+        if (error) {
+            alert("Erro ao confirmar presença");
+            btnConfirmar.disabled = false;
+            return;
+        }
+
+        btnConfirmar.innerText = "Presença confirmada com sucesso";
+    }
+
+    btnConfirmar.addEventListener("click", confirmarPresenca);
+
+    carregarConvidado();
+</script>
+
+</body>
+</html>
