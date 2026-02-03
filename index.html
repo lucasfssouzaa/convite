@@ -321,7 +321,7 @@
         pointer-events:auto;
     }
 
-    #logo-frente{
+    #selo{
         z-index:10;
         position:absolute;
         top:50%;
@@ -335,12 +335,47 @@
         align-items:center;
         justify-content:center;
         display:flex;
+        border: 5px solid var(--azul-escuro);
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
 
-    #logo-frente img{
+    #selo img{
         width:100%;
         object-fit:contain;
     }
+
+    #abrirConvite {
+        position: absolute;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #ffffff;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+        text-align: center;
+        opacity: 0.9;
+        animation: pulseConvite 2s ease-in-out infinite;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.35);
+        pointer-events: none;
+        transition: opacity 0.5s ease, transform 0.5s ease;
+        z-index:10;
+    }
+
+    @keyframes pulseConvite {
+        0% {
+            transform: translateX(-50%) scale(1);
+            opacity: 0.7;
+        }
+        50% {
+            transform: translateX(-50%) scale(1.08);
+            opacity: 1;
+        }
+        100% {
+            transform: translateX(-50%) scale(1);
+            opacity: 0.7;
+        }
+    }
+
     
     /* ================= RESPONSIVO ================= */
     @media (orientation: landscape){
@@ -410,9 +445,13 @@
         <div class="aba"></div>
         <div class="base"></div>
         <!-- Conteudo da frente do convite -->
-        <div class="conteudo-frente" id="logo-frente">
-            <!-- <img src="fotos/Logo_letras.png" alt="Logo"> -->
-            <img src="fotos/Logo_basica.png" alt="Logo">
+        <div class="conteudo-frente" style="width: 100%; height: 100%;">
+            <div id="selo">
+                <!-- <img src="fotos/Logo_letras.png" alt="Logo"> -->
+                <img src="fotos/Logo_basica.png" alt="Logo">
+            </div>
+            <h1 id="abrirConvite">ABRIR CONVITE</h1>
+            
         </div>
 
         <div class="carta">
@@ -478,7 +517,9 @@ window.addEventListener("load", () => {
 });
 
 function abrirConvite(){
-    const logoFrente = document.getElementById("logo-frente");
+    const logoFrente = document.getElementById("selo");
+    const abrirConvite = document.getElementById("abrirConvite");
+    abrirConvite.style.display = "none";
 
     // some suavemente o selo
     logoFrente.style.transition = "opacity 0.5s ease";
