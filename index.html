@@ -263,7 +263,7 @@
     .base{
         position:fixed;
         inset:0;
-        background:#f4f4f4;
+        background:#1d2d52;
         z-index:1;
     }
     
@@ -273,7 +273,7 @@
         left:0;
         width:100%;
         height:50%;
-        background:#ededed;
+        background:#152448;
         clip-path:polygon(0 0, 100% 0, 50% 100%);
         transform-origin:top;
         transition:transform 1s ease;
@@ -319,6 +319,27 @@
         bottom:5%;
         opacity:1;
         pointer-events:auto;
+    }
+
+    #logo-frente{
+        z-index:10;
+        position:absolute;
+        top:50%;
+        left:50%;
+        transform:translate(-50%, -50%);
+        border-radius:50%;
+        padding:5px;
+        background:white;
+        width:120px;
+        height:120px;
+        align-items:center;
+        justify-content:center;
+        display:flex;
+    }
+
+    #logo-frente img{
+        width:100%;
+        object-fit:contain;
     }
     
     /* ================= RESPONSIVO ================= */
@@ -385,9 +406,14 @@
 
 
 <div class="tela">
-    <div class="envelope" id="envelope">
+    <div class="envelope" id="envelope" onClick="abrirConvite()">
         <div class="aba"></div>
         <div class="base"></div>
+        <!-- Conteudo da frente do convite -->
+        <div class="conteudo-frente" id="logo-frente">
+            <!-- <img src="fotos/Logo_letras.png" alt="Logo"> -->
+            <img src="fotos/Logo_basica.png" alt="Logo">
+        </div>
 
         <div class="carta">
                     
@@ -446,21 +472,29 @@
 </div>
 
 <script>
-const envelope = document.getElementById("envelope");
 
 window.addEventListener("load", () => {
     window.scrollTo(0, 0);
 });
 
-envelope.addEventListener("click", () => {
-    envelope.classList.add("aberto");
+function abrirConvite(){
+    const logoFrente = document.getElementById("logo-frente");
+
+    // some suavemente o selo
+    logoFrente.style.transition = "opacity 0.5s ease";
+    logoFrente.style.opacity = "0";
+    logoFrente.style.pointerEvents = "none";
+    
     setTimeout(() => {
-        document.getElementById("menu").classList.remove("hide-menu");
-        document.getElementById("menuLateral").classList.remove("hide-menu");
-    }, 1000);
-    //remove a classe noScroll da body
+        
+        envelope.classList.add("aberto");
+        setTimeout(() => {
+            document.getElementById("menu").classList.remove("hide-menu");
+            document.getElementById("menuLateral").classList.remove("hide-menu");
+        }, 1000);
+    }, 500);
     document.body.classList.remove("noScroll");
-});
+};
 
 function toggleMenu(){
     const menu = document.getElementById("menuLateral");
