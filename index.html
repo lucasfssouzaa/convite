@@ -113,7 +113,7 @@
     }
     
     /* ================= SEÇÕES ================= */
-    section{
+    .section{
         padding:100px 20px;
         text-align:center;
     }
@@ -265,6 +265,7 @@
         inset:0;
         background:#1d2d52;
         z-index:1;
+        height:120%;
     }
     
     .aba{
@@ -286,9 +287,6 @@
         left:2%;
         width:96%;
         height:85%;
-        background:white;
-        border-radius:8px;
-        padding:24px;
         text-align:center;
         z-index:2;
         box-shadow:0 10px 30px rgba(0,0,0,.2);
@@ -309,6 +307,13 @@
     .carta p{
         font-size:1rem;
         line-height:1.6;
+    }
+
+    .conteudo-carta{
+        width: 100%;
+        padding: 24px;
+        border-radius: 8px;
+        background-color: white;
     }
     
     .envelope.aberto .aba{
@@ -385,6 +390,10 @@
     }
     
     @media(max-width:768px){
+        #abrirConvite{
+            bottom: 100px;
+        }
+
         nav ul{
             display:none;
         }
@@ -428,6 +437,7 @@
         <li><a href="#home">Home</a></li>
         <li><a href="#save-date">Data do Casamento</a></li>
         <li><a href="#noivos">Noivos</a></li>
+        <li><a href="#dressCode">Dress Code</a></li>
         <li><a href="#local">Local</a></li>
         <li><a href="#confirmar">Confirmar Presença</a></li>
         <li><a href="#presentes">Presentes</a></li>
@@ -436,11 +446,13 @@
 </nav>
 </header>
 
-<div class="menu-lateral hide-menu menu" id="menuLateral">
+<div id="bg-menuLateral" onClick="toggleMenu()" style="width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); position: fixed; top: 0; left: 0; z-index: 20; display: none;"></div>
+<div class="menu-lateral hide-menu menu" id="menuLateral" style="z-index: 21;">
 <ul>
     <li><a onclick="toggleMenu()" href="#home">Home</a></li>
     <li><a onclick="toggleMenu()" href="#save-date">Data do Casamento</a></li>
     <li><a onclick="toggleMenu()" href="#noivos">Noivos</a></li>
+    <li><a onclick="toggleMenu()" href="#dressCode">Dress Code</a></li>
     <li><a onclick="toggleMenu()" href="#local">Local</a></li>
     <li><a onclick="toggleMenu()" href="#confirmar">Confirmar Presença</a></li>
     <li><a onclick="toggleMenu()" href="#presentes">Presentes</a></li>
@@ -463,57 +475,71 @@
         </div>
 
         <div class="carta">
-                    
-            <section id="home">
-                <div class="home-content">
-                    <h1 id="nomeConvidado">Carregando...</h1>
-                    <p id="info"></p>
+            <div class="conteudo-carta">                    
+                <div class="section" id="home">
+                    <div class="home-content">
+                        <h1 id="nomeConvidado">Carregando...</h1>
+                        <p id="info"></p>
+                    </div>
                 </div>
-            </section>
-            
-            <section id="save-date">
-                <h2 class="titulo">Save the Date</h2>
-                <h2>📅 14 de Novembro de 2026</h2>
-                <p>Às 12:00</p>
-            </section>
-            
-            <section id="contador">
-                <h2 class="titulo">Contagem Regressiva</h2>
-                <div id="cronometro">
-                    <div class="tempo"><span id="dias">0</span><br>Dias</div>
-                    <div class="tempo"><span id="horas">0</span><br>Horas</div>
-                    <div class="tempo"><span id="minutos">0</span><br>Min</div>
-                    <div class="tempo"><span id="segundos">0</span><br>Seg</div>
+
+                <div class="section" id="apresentacao">
+                    <h2 class="titulo">Apresentacao</h2>
+                    <p>Aqui vai uma apresentacao sobre o convite, a festa</p>
                 </div>
-            </section>
-            
-            <section id="noivos">
-            <h2 class="titulo">Sobre os Noivos</h2>
-            <p>Uma história construída com amor, parceria e muitos sonhos.</p>
-            <div class="fotos">
-                <img src="fotos/lucas.png">
-                <img src="fotos/dayane.png">
+                
+                <div class="section" id="save-date">
+                    <h2 class="titulo">Save the Date</h2>
+                    <h2>📅 14 de Novembro de 2026</h2>
+                    <p>Às 12:00</p>
+                </div>
+                
+                <div class="section" id="contador">
+                    <h2 class="titulo">Contagem Regressiva</h2>
+                    <div id="cronometro">
+                        <div class="tempo"><span id="dias">0</span><br>Dias</div>
+                        <div class="tempo"><span id="horas">0</span><br>Horas</div>
+                        <div class="tempo"><span id="minutos">0</span><br>Min</div>
+                        <div class="tempo"><span id="segundos">0</span><br>Seg</div>
+                    </div>
+                </div>
+                
+                <div class="section" id="noivos">
+                    <h2 class="titulo">Sobre os Noivos</h2>
+                    <p>Uma história construída com amor, parceria e muitos sonhos.</p>
+                    <div class="fotos">
+                        <img src="fotos/lucas.png">
+                        <img src="fotos/dayane.png">
+                    </div>
+                </div>
+
+                <div class="section" id="dressCode">
+                    <h2 class="titulo">Dress Code</h2>
+                    <p>Casual</p>
+                </div>
+                
+                <div class="section" id="local">
+                    <h2 class="titulo">Local</h2>
+                    <p>Chácara Betel - Ribeirão Pires</p>
+                    <br>
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d233962.71098633212!2d-46.7382115816492!3d-23.61625985061271!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce73a975b11369%3A0x4f09e82194583788!2sCh%C3%A1cara%20Betel%20-%20Ribeir%C3%A3o%20Pires!5e0!3m2!1spt-BR!2sbr!4v1769044670654!5m2!1spt-BR!2sbr" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+                
+                <div class="section" id="confirmar">
+                    <h2 class="titulo">Confirme sua Presença</h2>
+                    <button id="btnConfirmar">Confirmar presença</button>
+                </div>
+                
+                <div class="section" id="presentes">
+                    <h2 class="titulo">Presentes</h2>
+                    <p>Se quiser nos presentear em dinheiro:</p>
+                    <div class="pix">PIX: seu-pix-aqui</div>
+
+                    <h2 class="titulo">Sugestões de Presentes</h2>
+                    <p>Se quiser nos presentear com algo, aqui estão algumas sugestões:</p>
+                </div>
+                
             </div>
-            </section>
-            
-            <section id="local">
-            <h2 class="titulo">Local</h2>
-            <p>Chácara Betel - Ribeirão Pires</p>
-            <br>
-            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d233962.71098633212!2d-46.7382115816492!3d-23.61625985061271!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce73a975b11369%3A0x4f09e82194583788!2sCh%C3%A1cara%20Betel%20-%20Ribeir%C3%A3o%20Pires!5e0!3m2!1spt-BR!2sbr!4v1769044670654!5m2!1spt-BR!2sbr" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-            </section>
-            
-            <section id="confirmar">
-            <h2 class="titulo">Confirme sua Presença</h2>
-            <button id="btnConfirmar">Confirmar presença</button>
-            </section>
-            
-            <section id="presentes">
-            <h2 class="titulo">Presentes</h2>
-            <p>Se quiser nos presentear em dinheiro:</p>
-            <div class="pix">PIX: seu-pix-aqui</div>
-            </section>
-    
         </div>
     </div>
 </div>
@@ -547,7 +573,17 @@ function abrirConvite(){
 
 function toggleMenu(){
     const menu = document.getElementById("menuLateral");
-    menu.style.right = menu.style.right === "0px" ? "-100%" : "0px";
+    const bgMenuLateral = document.getElementById("bg-menuLateral");
+
+    console.log('posicao do menu: ', menu.style.right);
+
+    if(menu.style.right === "0px"){
+        bgMenuLateral.style.display = "none";
+        menu.style.right = "-100%";
+    } else {
+        bgMenuLateral.style.display = "block";
+        menu.style.right = "0px";
+    }
 }
 
 /* CONTADOR */
