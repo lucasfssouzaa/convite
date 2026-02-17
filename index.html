@@ -136,12 +136,47 @@
 
                     <h2 class="titulo" style="margin-top: 20px;">Sugestões de Presentes</h2>
                     <p>Se quiser nos presentear com algo, aqui estão algumas sugestões:</p>
+                    <div id="gridSugestoes" class="grid-sugestoes"></div>
                 </div>
                 
             </div>
         </div>
     </div>
 </div>
+<!-- Modal de Presente -->
+<div id="presenteOverlay" class="presente-overlay">
+    <div class="presente-modal">
+
+        <span class="material-symbols-outlined presente-fechar"
+              onclick="fecharModalPresente()">close</span>
+
+        <img id="presenteImagem" src="" alt="Presente">
+
+        <h3 id="presenteNome"></h3>
+
+        <div class="presente-preco" id="presentePreco"></div>
+
+        <a id="presenteLink"
+           href="#"
+           target="_blank"
+           class="presente-link">
+           Visitar loja
+        </a>
+
+        <button id="presenteAcao" class="presente-botao"></button>
+
+        <p class="presente-explicacao">
+            Reservar um presente não obriga a compra. É apenas um sinal para os noivos
+            e os demais convidados de que você pretende presenteá-los com esse item,
+            ajudando a evitar presentes duplicados.
+            <br><br>
+            Você poderá cancelar a reserva a qualquer momento.
+            O nome de quem reservou não será exibido aos demais convidados.
+        </p>
+
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 
@@ -218,82 +253,211 @@ setInterval(()=>{
 },1000);
 
 const SUPABASE_URL = "https://mtwabudrvpdkmayuqfsb.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10d2FidWRydnBka21heXVxZnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMjA4NTYsImV4cCI6MjA4NDU5Njg1Nn0.Mao-afziGNwwtIRR_gYQ2HvmVYa0VT9luutZE2P41kM";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10d2FidWRydnBka21heXVxZnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMjA4NTYsImV4cCI6MjA4NDU5Njg1Nn0.Mao-afziGNwwtIRR_gYQ2HvmVYa0VT9luutZE2P41kM";
 
-    const supabaseClient = supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+const params = new URLSearchParams(window.location.search);
+const convidadoId = params.get("c");
+
+const nomeEl = document.getElementById("nomeConvidado");
+const infoEl = document.getElementById("info");
+const btnConfirmar = document.getElementById("btnConfirmar");
+
+if (!convidadoId) {
+    nomeEl.innerText = "Convite inválido";
+    btnConfirmar.disabled = true;
+    throw new Error("Código de convidado não informado");
+}
+
+async function carregarConvidado() {
+    const { data, error } = await supabaseClient
+        .from("convidados")
+        .select("*")
+        .eq("codigo", convidadoId)
+        .single();
+
+    if (error || !data) {
+        nomeEl.innerText = "Convidado não encontrado";
+        btnConfirmar.disabled = true;
+        return;
+    }
+
+    nomeEl.innerText = `Olá, ${data.nome}`;
+    if(data.qtdAdultos + data.qtdCriancas > 1){
+        infoEl.innerText = `Vocês estão sendo convidados para o nosso casamento`;
+    } else {
+        infoEl.innerText = `Você está sendo convidado para o nosso casamento`;
+    }
+
+    if (data.confirmacao) {
+        btnConfirmar.innerText = "Presença já confirmada";
+        btnConfirmar.disabled = true;
+    }
+}
+
+async function confirmarPresenca() {
+    btnConfirmar.disabled = true;
+
+    const { error } = await supabaseClient
+        .from("convidados")
+        .update({
+            confirmacao: true,
+            dataConfirmacao: agoraEmIsoLocal()
+        })
+        .eq("codigo", convidadoId);
+
+    if (error) {
+        alert("Erro ao confirmar presença");
+        btnConfirmar.disabled = false;
+        return;
+    }
+
+    btnConfirmar.innerText = "Presença confirmada com sucesso";
+}
+
+btnConfirmar.addEventListener("click", confirmarPresenca);
+
+carregarConvidado();
+
+function agoraEmIsoLocal() {
+    const agora = new Date();
+    const offsetMs = agora.getTimezoneOffset() * 60000;
+    return new Date(agora.getTime() - offsetMs).toISOString();
+}
+
+
+function abrirModalPresente(sugestao, idConvidado) {
+
+    const overlay = document.getElementById("presenteOverlay");
+
+    const img = document.getElementById("presenteImagem");
+    img.src = `assets/sugestoes/sugestao_${sugestao.id}.png`;
+
+    img.onerror = function () {
+        this.onerror = null;
+        this.src = `assets/sugestoes/sugestao_${sugestao.id}.jpeg`;
+    };
+
+    document.getElementById("presenteNome").innerText = sugestao.nome;
+
+    document.getElementById("presentePreco").innerText =
+        `~ R$ ${Number(sugestao.preco).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+
+    document.getElementById("presenteLink").href = sugestao.link;
+
+    const botao = document.getElementById("presenteAcao");
+
+    // Reset estado
+    botao.classList.remove(
+        "presente-botao-reservar",
+        "presente-botao-cancelar"
     );
+    botao.disabled = false;
 
-    const params = new URLSearchParams(window.location.search);
-    const convidadoId = params.get("c");
-    console.log('id: ', convidadoId);
+    if (!sugestao.reservado_por) {
 
-    const nomeEl = document.getElementById("nomeConvidado");
-    const infoEl = document.getElementById("info");
-    const btnConfirmar = document.getElementById("btnConfirmar");
+        botao.innerText = "Reservar presente";
+        botao.classList.add("presente-botao-reservar");
 
-    if (!convidadoId) {
-        nomeEl.innerText = "Convite inválido";
-        btnConfirmar.disabled = true;
-        throw new Error("ID não informado");
+    } else if (Number(sugestao.reservado_por) === Number(idConvidado)) {
+
+        botao.innerText = "Cancelar reserva";
+        botao.classList.add("presente-botao-cancelar");
+
+    } else {
+
+        botao.innerText = "Presente reservado por outro convidado";
+        botao.classList.add("presente-botao-cancelar");
+        botao.disabled = true; // 🔒 não clicável
+
     }
 
-    async function carregarConvidado() {
-        const { data, error } = await supabaseClient
-            .from("convidados")
-            .select("*")
-            .eq("id", convidadoId)
-            .single();
+    overlay.classList.add("presente-overlay-aberto");
+}
 
-        if (error || !data) {
-            nomeEl.innerText = "Convidado não encontrado";
-            btnConfirmar.disabled = true;
-            return;
-        }
+function fecharModalPresente() {
+document.getElementById("presenteOverlay").classList.remove("presente-overlay-aberto");
+}
 
-        nomeEl.innerText = `Olá, ${data.nome}`;
-        if(data.qtdAdultos + data.qtdCriancas > 1){
-            infoEl.innerText = `Vocês estão sendo convidados para o nosso casamento`;
-        } else {
-            infoEl.innerText = `Você está sendo convidado para o nosso casamento`;
-        }
 
-        if (data.confirmacao) {
-            btnConfirmar.innerText = "Presença já confirmada";
-            btnConfirmar.disabled = true;
-        }
+async function carregarSugestoes() {
+
+    const idConvidado = await getIDConvidado();
+
+    const { data, error } = await supabaseClient
+        .from("presentes")
+        .select("*")
+        .order("id", { ascending: true });
+
+    if (error) {
+        console.error("Erro ao carregar sugestões de presentes:", error);
+        return;
     }
 
-    async function confirmarPresenca() {
-        btnConfirmar.disabled = true;
+    const grid = document.getElementById("gridSugestoes");
+    grid.innerHTML = "";
 
-        const { error } = await supabaseClient
-            .from("convidados")
-            .update({
-                confirmacao: true,
-                dataConfirmacao: agoraEmIsoLocal()
-            })
-            .eq("id", convidadoId);
+    data.forEach(sugestao => {
 
-        if (error) {
-            alert("Erro ao confirmar presença");
-            btnConfirmar.disabled = false;
-            return;
+        const card = document.createElement("div");
+        card.classList.add("card-sugestao");
+        card.addEventListener("click", () => abrirModalPresente(sugestao, idConvidado));
+
+        card.innerHTML = `
+            <img src="assets/sugestoes/sugestao_${sugestao.id}.png"
+                alt="${sugestao.nome}"
+                onerror="this.onerror=null; this.src='assets/sugestoes/sugestao_${sugestao.id}.jpeg';">
+            
+            <h3>${sugestao.nome}</h3>
+            
+            <div class="preco">
+                ~ R$ ${Number(sugestao.preco).toLocaleString("pt-BR", {minimumFractionDigits: 2})}
+            </div>
+        `;
+
+        // 🔎 Lógica de reserva
+        if (sugestao.reservado_por) {
+
+            const overlay = document.createElement("div");
+            overlay.classList.add("overlay-reservado");
+
+            if (sugestao.reservado_por === idConvidado) {
+                overlay.classList.add("overlay-meu");
+                overlay.innerText = "Você reservou esse presente";
+            } else {
+                overlay.classList.add("overlay-outro");
+                overlay.innerText = "Presente reservado";
+            }
+
+            card.appendChild(overlay);
         }
 
-        btnConfirmar.innerText = "Presença confirmada com sucesso";
-    }
+        grid.appendChild(card);
+    });
+}
 
-    btnConfirmar.addEventListener("click", confirmarPresenca);
+carregarSugestoes();
 
-    carregarConvidado();
+async function getIDConvidado() {
 
-    function agoraEmIsoLocal() {
-        const agora = new Date();
-        const offsetMs = agora.getTimezoneOffset() * 60000;
-        return new Date(agora.getTime() - offsetMs).toISOString();
-    }
+const { data, error } = await supabaseClient
+    .from("convidados")
+    .select("id")
+    .eq("codigo", convidadoId)
+    .single();
+
+if (error || !data) {
+    console.error("Erro ao buscar ID do convidado:", error);
+    return null;
+}
+
+return data.id;
+}
+
 </script>
 
 </body>

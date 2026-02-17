@@ -420,6 +420,8 @@
         z-index:10;
     }
 
+    /* Menu */
+
     .icon-menu{
         font-size: 24px;
         margin-right: 5px;
@@ -446,6 +448,233 @@
         margin-top: 4px;
     }
 
+    /* Sugestões de Presentes */
+    .grid-sugestoes {
+        display: grid;
+        gap: 24px;
+        margin-top: 40px;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    
+    .card-sugestao {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        transition: transform .2s ease, box-shadow .2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .card-sugestao:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 24px rgba(0,0,0,.12);
+    }
+    
+    .card-sugestao img {
+        width: 100%;
+        max-width: 180px;
+        height: auto;
+        object-fit: contain;
+        margin-bottom: 16px;
+    }
+    
+    .card-sugestao h3 {
+        font-size: 18px;
+        margin-bottom: 8px;
+        color: var(--azul-escuro);
+    }
+    
+    .card-sugestao .preco {
+        font-size: 15px;
+        opacity: .7;
+    }
+    
+    .card-sugestao {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .overlay-reservado {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+        font-weight: 600;
+        font-size: 16px;
+        backdrop-filter: blur(2px);
+    }
+    
+    .overlay-meu {
+        background: rgba(212, 175, 55, 0.75); /* dourado translúcido */
+        color: white;
+    }
+    
+    .overlay-outro {
+        background: rgba(0, 0, 0, 0.55);
+        color: white;
+    }
+    
+    /* ================= MODAL PRESENTE ================= */
+
+    /* Overlay escuro */
+    .presente-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(4px);
+        display: none; /* começa fechado */
+        align-items: center;
+        justify-content: center;
+        z-index: 99999;
+    }
+
+    /* Classe que ativa o modal */
+    .presente-overlay-aberto {
+        display: flex;
+    }
+
+    /* Caixa central */
+    .presente-modal {
+        background: white;
+        width: 90%;
+        max-width: 440px;
+        border-radius: 20px;
+        padding: 32px;
+        position: relative;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        animation: presenteModalFade .25s ease;
+    }
+
+    /* Animação suave */
+    @keyframes presenteModalFade {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    /* Botão X */
+    .presente-fechar {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        cursor: pointer;
+        font-size: 26px;
+        color: #777;
+        transition: transform .2s ease, color .2s ease;
+    }
+
+    .presente-fechar:hover {
+        transform: rotate(90deg);
+        color: var(--azul-escuro);
+    }
+
+    /* Imagem */
+    .presente-modal img {
+        width: 100%;
+        max-width: 220px;
+        height: auto;
+        object-fit: contain;
+        margin-bottom: 20px;
+    }
+
+    /* Nome */
+    .presente-modal h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+        color: var(--azul-escuro);
+    }
+
+    /* Preço */
+    .presente-preco {
+        font-size: 16px;
+        margin-bottom: 12px;
+        opacity: 0.8;
+    }
+
+    /* Link loja */
+    .presente-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: var(--azul-escuro);
+        font-weight: 500;
+        text-decoration: underline;
+        transition: opacity .2s ease;
+    }
+
+    .presente-link:hover {
+        opacity: .7;
+    }
+
+    /* Botão principal */
+    .presente-botao {
+        width: 100%;
+        padding: 14px;
+        border-radius: 40px;
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 500;
+        margin-bottom: 18px;
+        transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+
+    /* Botão reservar */
+    .presente-botao-reservar {
+        background: var(--azul-escuro);
+        color: white;
+    }
+
+    .presente-botao-reservar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Botão cancelar */
+    .presente-botao-cancelar {
+        background: #9e9e9e;
+        color: white;
+    }
+
+    .presente-botao-cancelar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Texto explicativo */
+    .presente-explicacao {
+        font-size: 13px;
+        line-height: 1.6;
+        opacity: 0.7;
+    }
+
+    /* Responsividade extra */
+    @media (max-width: 480px) {
+
+        .presente-modal {
+            padding: 24px;
+            border-radius: 16px;
+        }
+
+        .presente-modal img {
+            max-width: 180px;
+        }
+
+    }
+
+
+    /* ================= ANIMAÇÕES ================= */
     @keyframes pulseConvite {
         0% {
             transform: translateX(-50%) scale(1);
