@@ -444,9 +444,9 @@
         display: flex;
     }
 
-    #menuLateral ul li a p {
+    /* #menuLateral ul li a p {
         margin-top: 4px;
-    }
+    } */
 
     /* Sugestões de Presentes */
     .grid-sugestoes {
@@ -718,6 +718,14 @@
             bottom: 100px;
         }
 
+        #cronometro{
+            gap:10px;
+        }
+
+        #contador{
+            padding: 100px 0;
+        }
+
         nav ul{
             display:none;
         }
@@ -731,12 +739,12 @@
         }
 
         .tempo{
-            padding:10px;
-            min-width: 70px;
+            padding:5px 10px;
+            min-width: 65px;
         }
 
         .tempo span{
-            font-size:20px;
+            font-size:16px;
         }
 
         #selo {
