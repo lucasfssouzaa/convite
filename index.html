@@ -188,17 +188,46 @@ function copiarPix(elemento) {
 
 const chaveSomenteNumeros = "23376410828";
 
-navigator.clipboard.writeText(chaveSomenteNumeros).then(() => {
-
+const onCopySuccess = () => {
     elemento.textContent = "check";
 
     setTimeout(() => {
         elemento.textContent = "content_copy";
     }, 2000);
+};
 
-}).catch(err => {
+const onCopyError = (err) => {
     console.error("Erro ao copiar:", err);
-});
+    alert("Não foi possível copiar automaticamente. Copie manualmente: " + chaveSomenteNumeros);
+};
+
+if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(chaveSomenteNumeros)
+        .then(onCopySuccess)
+        .catch(onCopyError);
+    return;
+}
+
+try {
+    const inputTemporario = document.createElement("textarea");
+    inputTemporario.value = chaveSomenteNumeros;
+    inputTemporario.setAttribute("readonly", "");
+    inputTemporario.style.position = "fixed";
+    inputTemporario.style.left = "-9999px";
+    document.body.appendChild(inputTemporario);
+    inputTemporario.select();
+
+    const copiou = document.execCommand("copy");
+    document.body.removeChild(inputTemporario);
+
+    if (copiou) {
+        onCopySuccess();
+    } else {
+        onCopyError(new Error("execCommand retornou false"));
+    }
+} catch (err) {
+    onCopyError(err);
+}
 }
 
 function abrirConvite(){
