@@ -391,11 +391,13 @@ function abrirModalPresente(sugestao, idConvidado) {
 
         botao.innerText = "Reservar presente";
         botao.classList.add("presente-botao-reservar");
+        botao.addEventListener("click", () => reservarPresente(sugestao.id));
 
     } else if (Number(sugestao.reservado_por) === Number(idConvidado)) {
 
         botao.innerText = "Cancelar reserva";
         botao.classList.add("presente-botao-cancelar");
+        botao.addEventListener("click", () => cancelarReserva(sugestao.id));
 
     } else {
 
@@ -408,10 +410,88 @@ function abrirModalPresente(sugestao, idConvidado) {
     overlay.classList.add("presente-overlay-aberto");
 }
 
-function fecharModalPresente() {
-document.getElementById("presenteOverlay").classList.remove("presente-overlay-aberto");
+async function reservarPresente(sugestaoId) {
+
+    const idConvidado = await getIDConvidado();
+
+    // 1. Verifica se já foi reservado
+    const { data, error } = await supabaseClient
+        .from("presentes")
+        .select("reservado_por")
+        .eq("id", sugestaoId)
+        .single();
+
+    if (error || !data) {
+        alert("Erro ao buscar presente");
+        return;
+    }
+
+    // 2. Já reservado
+    if (data.reservado_por) {
+        alert("Que pena! Esse presente acabou de ser reservado.");
+        return;
+    }
+
+    // 3. Tenta reservar
+    const { data: dataUpdate, error: errorUpdate } = await supabaseClient
+        .from("presentes")
+        .update({
+            reservado_por: idConvidado,
+            data_reserva: agoraEmIsoLocal()
+        })
+        .eq("id", sugestaoId)
+        .select();
+
+    console.log("resultado update:", data);
+
+    if (errorUpdate) {
+        alert("Erro ao reservar presente");
+        return;
+    }
+
+    alert("Presente reservado com sucesso 🎁");
+    fecharModalPresente();
+
+    carregarSugestoes();
 }
 
+async function cancelarReserva(sugestaoId) {
+
+    const idConvidado = await getIDConvidado();
+
+    // Tenta cancelar SOMENTE se o presente foi reservado por esse usuário
+    const { data, error } = await supabaseClient
+        .from("presentes")
+        .update({
+            reservado_por: null,
+            data_reserva: null
+        })
+        .eq("id", sugestaoId)
+        .eq("reservado_por", idConvidado)
+        .select();
+
+    if (error) {
+        alert("Erro ao cancelar reserva");
+        return;
+    }
+
+    // Se não atualizou nada, significa que:
+    // - não estava reservado
+    // - ou foi reservado por outro
+    if (!data || data.length === 0) {
+        alert("Esse presente foi reservado por outro convidado e não pode ser cancelado");
+        return;
+    }
+
+    alert("Reserva cancelada com sucesso");
+
+    carregarSugestoes();
+    fecharModalPresente();
+}
+
+function fecharModalPresente() {
+    document.getElementById("presenteOverlay").classList.remove("presente-overlay-aberto");
+}
 
 async function carregarSugestoes() {
 
@@ -486,6 +566,7 @@ if (error || !data) {
 
 return data.id;
 }
+
 
 </script>
 
