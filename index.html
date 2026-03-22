@@ -145,10 +145,11 @@
 </div>
 <!-- Modal de Presente -->
 <div id="presenteOverlay" class="presente-overlay">
-    <div class="presente-modal">
+    <div style="background-color: rgba(0, 0, 0, 0.5); width: 100%; height: 100%; position: fixed; top: 0; left: 0; z-index: 99999;" onClick="document.getElementById('presenteOverlay').classList.remove('presente-overlay-aberto')"></div>
+    <div class="presente-modal" style="z-index: 999999;">
 
         <span class="material-symbols-outlined presente-fechar"
-              onclick="fecharModalPresente()">close</span>
+              onclick="document.getElementById('presenteOverlay').classList.remove('presente-overlay-aberto')">close</span>
 
         <img id="presenteImagem" src="" alt="Presente">
 
@@ -267,7 +268,7 @@ function toggleMenu(){
 }
 
 /* CONTADOR */
-const dataEvento = new Date("2026-06-15T12:00:00");
+const dataEvento = new Date("2026-11-14T12:00:00");
 
 setInterval(()=>{
     const agora = new Date();
@@ -359,162 +360,67 @@ function agoraEmIsoLocal() {
 }
 
 
-function abrirModalPresente(sugestao, idConvidado) {
+const TABELA_PRESENTES = "presentes";
+const TABELA_NOTIFICACOES = "notificacoes";
+let idConvidadoAtual = null;
+let sugestoesCache = [];
 
-    const overlay = document.getElementById("presenteOverlay");
+function idsIguais(a, b) {
+    if (a === null || a === undefined || b === null || b === undefined) {
+        return false;
+    }
+    return String(a) === String(b);
+}
 
-    const img = document.getElementById("presenteImagem");
-    img.src = `assets/sugestoes/sugestao_${sugestao.id}.png`;
-
-    img.onerror = function () {
-        this.onerror = null;
-        this.src = `assets/sugestoes/sugestao_${sugestao.id}.jpeg`;
-    };
-
-    document.getElementById("presenteNome").innerText = sugestao.nome;
-
-    document.getElementById("presentePreco").innerText =
-        `~ R$ ${Number(sugestao.preco).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
-
-    document.getElementById("presenteLink").href = sugestao.link;
-
+function configurarBotaoAcaoPresente(sugestao) {
     const botao = document.getElementById("presenteAcao");
-
-    // Reset estado
-    botao.classList.remove(
-        "presente-botao-reservar",
-        "presente-botao-cancelar"
-    );
+    botao.classList.remove("presente-botao-reservar", "presente-botao-cancelar");
     botao.disabled = false;
 
     if (!sugestao.reservado_por) {
-
         botao.innerText = "Reservar presente";
         botao.classList.add("presente-botao-reservar");
-        botao.addEventListener("click", () => reservarPresente(sugestao.id));
+        return;
+    }
 
-    } else if (Number(sugestao.reservado_por) === Number(idConvidado)) {
-
+    if (idsIguais(sugestao.reservado_por, idConvidadoAtual)) {
         botao.innerText = "Cancelar reserva";
         botao.classList.add("presente-botao-cancelar");
-        botao.addEventListener("click", () => cancelarReserva(sugestao.id));
+        return;
+    }
 
+    botao.innerText = "Presente reservado por outro convidado";
+    botao.classList.add("presente-botao-cancelar");
+    botao.disabled = true;
+}
+
+function montarOverlayReservaCard(sugestao) {
+    if (!sugestao.reservado_por) {
+        return null;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.classList.add("overlay-reservado");
+
+    if (idsIguais(sugestao.reservado_por, idConvidadoAtual)) {
+        overlay.classList.add("overlay-meu");
+        overlay.innerText = "Você reservou esse presente";
     } else {
-
-        botao.innerText = "Presente reservado por outro convidado";
-        botao.classList.add("presente-botao-cancelar");
-        botao.disabled = true; // 🔒 não clicável
-
+        overlay.classList.add("overlay-outro");
+        overlay.innerText = "Presente reservado";
     }
 
-    overlay.classList.add("presente-overlay-aberto");
+    return overlay;
 }
 
-async function reservarPresente(sugestaoId) {
-
-    const idConvidado = await getIDConvidado();
-
-    // 1. Verifica se já foi reservado
-    const { data, error } = await supabaseClient
-        .from("presentes")
-        .select("reservado_por")
-        .eq("id", sugestaoId)
-        .single();
-
-    if (error || !data) {
-        alert("Erro ao buscar presente");
-        return;
-    }
-
-    // 2. Já reservado
-    if (data.reservado_por) {
-        alert("Que pena! Esse presente acabou de ser reservado.");
-        return;
-    }
-
-    // 3. Tenta reservar
-    const { data: dataUpdate, error: errorUpdate } = await supabaseClient
-        .from("presentes")
-        .update({
-            reservado_por: idConvidado,
-            data_reserva: agoraEmIsoLocal()
-        })
-        .eq("id", sugestaoId)
-        .select();
-
-    console.log("resultado update:", data);
-
-    if (errorUpdate) {
-        alert("Erro ao reservar presente");
-        return;
-    }
-
-    alert("Presente reservado com sucesso 🎁");
-    fecharModalPresente();
-
-    carregarSugestoes();
-}
-
-async function cancelarReserva(sugestaoId) {
-
-    const idConvidado = await getIDConvidado();
-
-    // Tenta cancelar SOMENTE se o presente foi reservado por esse usuário
-    const { data, error } = await supabaseClient
-        .from("presentes")
-        .update({
-            reservado_por: null,
-            data_reserva: null
-        })
-        .eq("id", sugestaoId)
-        .eq("reservado_por", idConvidado)
-        .select();
-
-    if (error) {
-        alert("Erro ao cancelar reserva");
-        return;
-    }
-
-    // Se não atualizou nada, significa que:
-    // - não estava reservado
-    // - ou foi reservado por outro
-    if (!data || data.length === 0) {
-        alert("Esse presente foi reservado por outro convidado e não pode ser cancelado");
-        return;
-    }
-
-    alert("Reserva cancelada com sucesso");
-
-    carregarSugestoes();
-    fecharModalPresente();
-}
-
-function fecharModalPresente() {
-    document.getElementById("presenteOverlay").classList.remove("presente-overlay-aberto");
-}
-
-async function carregarSugestoes() {
-
-    const idConvidado = await getIDConvidado();
-
-    const { data, error } = await supabaseClient
-        .from("presentes")
-        .select("*")
-        .order("id", { ascending: true });
-
-    if (error) {
-        console.error("Erro ao carregar sugestões de presentes:", error);
-        return;
-    }
-
+function renderizarSugestoes() {
     const grid = document.getElementById("gridSugestoes");
     grid.innerHTML = "";
 
-    data.forEach(sugestao => {
-
+    sugestoesCache.forEach((sugestao) => {
         const card = document.createElement("div");
         card.classList.add("card-sugestao");
-        card.addEventListener("click", () => abrirModalPresente(sugestao, idConvidado));
+        card.addEventListener("click", () => abrirModalPresente(sugestao));
 
         card.innerHTML = `
             <img src="assets/sugestoes/sugestao_${sugestao.id}.png"
@@ -524,29 +430,144 @@ async function carregarSugestoes() {
             <h3>${sugestao.nome}</h3>
             
             <div class="preco">
-                ~ R$ ${Number(sugestao.preco).toLocaleString("pt-BR", {minimumFractionDigits: 2})}
+                ~ R$ ${Number(sugestao.preco).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </div>
         `;
 
-        // 🔎 Lógica de reserva
-        if (sugestao.reservado_por) {
-
-            const overlay = document.createElement("div");
-            overlay.classList.add("overlay-reservado");
-
-            if (sugestao.reservado_por === idConvidado) {
-                overlay.classList.add("overlay-meu");
-                overlay.innerText = "Você reservou esse presente";
-            } else {
-                overlay.classList.add("overlay-outro");
-                overlay.innerText = "Presente reservado";
-            }
-
+        const overlay = montarOverlayReservaCard(sugestao);
+        if (overlay) {
             card.appendChild(overlay);
         }
 
         grid.appendChild(card);
     });
+}
+
+function abrirModalPresente(sugestao) {
+    const overlay = document.getElementById("presenteOverlay");
+
+    const img = document.getElementById("presenteImagem");
+    img.src = `assets/sugestoes/sugestao_${sugestao.id}.png`;
+    img.onerror = function () {
+        this.onerror = null;
+        this.src = `assets/sugestoes/sugestao_${sugestao.id}.jpeg`;
+    };
+
+    document.getElementById("presenteNome").innerText = sugestao.nome;
+    document.getElementById("presentePreco").innerText =
+        `~ R$ ${Number(sugestao.preco).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+    document.getElementById("presenteLink").href = sugestao.link;
+
+    configurarBotaoAcaoPresente(sugestao);
+
+    const botao = document.getElementById("presenteAcao");
+    botao.onclick = () => executarAcaoPresente(sugestao.id);
+
+    overlay.classList.add("presente-overlay-aberto");
+}
+
+async function enviarNotificacaoReserva(acao, sugestao) {
+    const payload = {
+        tipo: "presente",
+        acao,
+        convidado_id: idConvidadoAtual,
+        presente_id: sugestao.id,
+        mensagem: `${acao === "reservar" ? "Reserva" : "Cancelamento"} do presente: ${sugestao.nome}`,
+        criado_em: agoraEmIsoLocal()
+    };
+
+    const { error } = await supabaseClient.from(TABELA_NOTIFICACOES).insert(payload);
+    if (error) {
+        console.warn("Falha ao salvar notificação:", error);
+    }
+}
+
+async function executarAcaoPresente(sugestaoId) {
+    const sugestao = sugestoesCache.find((item) => String(item.id) === String(sugestaoId));
+    if (!sugestao) {
+        return;
+    }
+
+    const botao = document.getElementById("presenteAcao");
+    const textoOriginal = botao.innerText;
+    botao.disabled = true;
+    botao.innerText = "Processando...";
+
+    const ehReservaLivre = !sugestao.reservado_por;
+    const ehMinhaReserva = idsIguais(sugestao.reservado_por, idConvidadoAtual);
+
+    if (!ehReservaLivre && !ehMinhaReserva) {
+        configurarBotaoAcaoPresente(sugestao);
+        return;
+    }
+
+    if (ehReservaLivre) {
+        const { data, error } = await supabaseClient
+            .from(TABELA_PRESENTES)
+            .update({
+                reservado_por: idConvidadoAtual,
+                data_reserva: agoraEmIsoLocal()
+            })
+            .eq("id", sugestao.id)
+            .is("reservado_por", null)
+            .select("id, reservado_por, data_reserva");
+
+        if (error || !data || data.length === 0) {
+            console.error("Não foi possível reservar o presente:", error || "sem linhas atualizadas");
+            botao.innerText = textoOriginal;
+            configurarBotaoAcaoPresente(sugestao);
+            return;
+        }
+
+        sugestao.reservado_por = idConvidadoAtual;
+        sugestao.data_reserva = data[0].data_reserva || agoraEmIsoLocal();
+        await enviarNotificacaoReserva("reservar", sugestao);
+    } else {
+        const { data, error } = await supabaseClient
+            .from(TABELA_PRESENTES)
+            .update({
+                reservado_por: null,
+                data_reserva: null
+            })
+            .eq("id", sugestao.id)
+            .eq("reservado_por", idConvidadoAtual)
+            .select("id, reservado_por, data_reserva");
+
+        if (error || !data || data.length === 0) {
+            console.error("Não foi possível cancelar a reserva:", error || "sem linhas atualizadas");
+            botao.innerText = textoOriginal;
+            configurarBotaoAcaoPresente(sugestao);
+            return;
+        }
+
+        sugestao.reservado_por = null;
+        sugestao.data_reserva = null;
+        await enviarNotificacaoReserva("cancelar", sugestao);
+    }
+
+    renderizarSugestoes();
+    abrirModalPresente(sugestao);
+}
+
+async function carregarSugestoes() {
+    idConvidadoAtual = await getIDConvidado();
+    if (idConvidadoAtual === null || idConvidadoAtual === undefined) {
+        console.error("ID do convidado não encontrado.");
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from(TABELA_PRESENTES)
+        .select("*")
+        .order("id", { ascending: true });
+
+    if (error) {
+        console.error("Erro ao carregar sugestões de presentes:", error);
+        return;
+    }
+
+    sugestoesCache = data;
+    renderizarSugestoes();
 }
 
 carregarSugestoes();
