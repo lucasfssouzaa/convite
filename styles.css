@@ -552,6 +552,97 @@
         animation: presenteModalFade .25s ease;
     }
 
+    .home-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        
+        text-align: center;
+        color: #fff;
+    
+        max-width: 800px;
+        width: 90%;
+    
+        padding: 20px;
+    }
+    
+    /* Nome do convidado */
+    .home-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        
+        text-align: center;
+        color: #fff;
+    
+        max-width: 750px;
+        width: 90%;
+    
+        padding: 20px;
+    }
+    
+    /* Nome do convidado (cursivo elegante) */
+    #nomeConvidado {
+        font-family: 'Great Vibes', cursive;
+        font-size: 100px;
+        font-weight: normal;
+        line-height: 1.1;
+        margin-bottom: 15px;
+        letter-spacing: 1px;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+    }
+    
+    /* Frase leve */
+    #info {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 18px;
+        font-weight: 300;
+        margin-bottom: 8px;
+        line-height: 1.7;
+        opacity: 0.9;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.3);
+    }
+    
+    /* Frase principal */
+    #info2 {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 20px;
+        font-weight: 500;
+        margin-top: 5px;
+        line-height: 1.6;
+        text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+    }
+    @media (max-width: 768px) {
+        #info {
+            font-size: 16px;
+        }
+    
+        #info2 {
+            font-size: 17px;
+        }
+    
+        .home-content {
+            padding: 15px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+    
+        #nomeConvidado {
+            font-size: 60px;
+        }
+    
+        #info {
+            font-size: 14px;
+        }
+    
+        #info2 {
+            font-size: 15px;
+        }
+    }
+
     /* Animação suave */
     @keyframes presenteModalFade {
         from {

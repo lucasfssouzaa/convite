@@ -6,6 +6,8 @@
 <title>Convite de Casamento</title>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
     
 </head>
@@ -63,6 +65,7 @@
                     <div class="home-content">
                         <h1 id="nomeConvidado">Carregando...</h1>
                         <p id="info"></p>
+                        <p id="info2"></p>
                     </div>
                 </div>
 
@@ -295,6 +298,7 @@ const convidadoId = params.get("c");
 
 const nomeEl = document.getElementById("nomeConvidado");
 const infoEl = document.getElementById("info");
+const info2El = document.getElementById("info2");
 const btnConfirmar = document.getElementById("btnConfirmar");
 
 if (!convidadoId) {
@@ -316,11 +320,13 @@ async function carregarConvidado() {
         return;
     }
 
-    nomeEl.innerText = `Olá, ${data.nome}`;
+    nomeEl.innerText = `${data.nome}`;
     if(data.qtdAdultos + data.qtdCriancas > 1){
-        infoEl.innerText = `Vocês estão sendo convidados para o nosso casamento`;
+        infoEl.innerText = `Em um dia tão especial, seria uma alegria ter vocês com a gente`;
+        info2El.innerText = `Convidamos vocês para o nosso casamento`;
     } else {
-        infoEl.innerText = `Você está sendo convidado para o nosso casamento`;
+        infoEl.innerText = `Em um dia tão especial, sua presença não poderia faltar`;
+        info2El.innerText = `Convidamos você para o nosso casamento`;
     }
 
     if (data.confirmacao) {
