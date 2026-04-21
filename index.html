@@ -694,11 +694,30 @@ function montarOverlayReservaCard(sugestao) {
     return overlay;
 }
 
+function ordenarSugestoesPorPrioridade(sugestoes) {
+    return [...sugestoes].sort((a, b) => {
+        const grupoA = !a.reservado_por
+            ? 1
+            : (idsIguais(a.reservado_por, idConvidadoAtual) ? 0 : 2);
+        const grupoB = !b.reservado_por
+            ? 1
+            : (idsIguais(b.reservado_por, idConvidadoAtual) ? 0 : 2);
+
+        if (grupoA !== grupoB) {
+            return grupoA - grupoB;
+        }
+
+        return Number(a.id) - Number(b.id);
+    });
+}
+
 function renderizarSugestoes() {
     const grid = document.getElementById("gridSugestoes");
     grid.innerHTML = "";
 
-    sugestoesCache.forEach((sugestao) => {
+    const sugestoesOrdenadas = ordenarSugestoesPorPrioridade(sugestoesCache);
+
+    sugestoesOrdenadas.forEach((sugestao) => {
         const card = document.createElement("div");
         card.classList.add("card-sugestao");
         card.addEventListener("click", () => abrirModalPresente(sugestao));
@@ -721,6 +740,29 @@ function renderizarSugestoes() {
         }
 
         grid.appendChild(card);
+    });
+}
+
+function irParaTopoListaPresentes() {
+    const secaoPresentes = document.getElementById("presentes");
+    if (!secaoPresentes) {
+        return;
+    }
+
+    const menu = document.getElementById("menu");
+    const alturaMenu = menu ? menu.offsetHeight : 0;
+    const margemTopo = 12;
+    const deslocamentoParaBaixo = 200;
+    const destino =
+        secaoPresentes.getBoundingClientRect().top +
+        window.pageYOffset -
+        alturaMenu -
+        margemTopo +
+        deslocamentoParaBaixo;
+
+    window.scrollTo({
+        top: Math.max(destino, 0),
+        behavior: "smooth"
     });
 }
 
@@ -782,6 +824,8 @@ async function executarAcaoPresente(sugestaoId) {
         return;
     }
 
+    let reservaRealizada = false;
+
     if (ehReservaLivre) {
         const { data, error } = await supabaseClient
             .from(TABELA_PRESENTES)
@@ -802,6 +846,7 @@ async function executarAcaoPresente(sugestaoId) {
 
         sugestao.reservado_por = idConvidadoAtual;
         sugestao.data_reserva = data[0].data_reserva || agoraEmIsoLocal();
+        reservaRealizada = true;
         await enviarNotificacaoReserva("reservar", sugestao);
     } else {
         const { data, error } = await supabaseClient
@@ -827,6 +872,13 @@ async function executarAcaoPresente(sugestaoId) {
     }
 
     renderizarSugestoes();
+
+    if (reservaRealizada) {
+        document.getElementById("presenteOverlay").classList.remove("presente-overlay-aberto");
+        setTimeout(irParaTopoListaPresentes, 80);
+        return;
+    }
+
     abrirModalPresente(sugestao);
 }
 
@@ -847,7 +899,7 @@ async function carregarSugestoes() {
         return;
     }
 
-    sugestoesCache = data;
+    sugestoesCache = ordenarSugestoesPorPrioridade(data);
     renderizarSugestoes();
 }
 
