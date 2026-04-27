@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel dos Noivos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="noivos.css">
+</head>
+<body>
+    <main class="page-shell">
+        <section class="card auth-card" id="authCard">
+            <p class="kicker">Area reservada</p>
+            <h1 class="title">Painel dos Noivos</h1>
+            <p class="description">Digite a senha de 4 digitos para entrar.</p>
+
+            <form id="authForm" class="auth-form" novalidate>
+                <label for="pinInput">Senha</label>
+                <input
+                    id="pinInput"
+                    type="password"
+                    inputmode="numeric"
+                    maxlength="4"
+                    pattern="[0-9]{4}"
+                    placeholder="0000"
+                    autocomplete="one-time-code"
+                    required
+                >
+                <button type="submit">Entrar</button>
+                <p id="authMessage" class="message" aria-live="polite"></p>
+            </form>
+        </section>
+
+        <section class="dashboard hidden" id="dashboard">
+            <section class="card dashboard-header">
+                <p class="kicker">Acesso liberado</p>
+                <h2 class="title">Painel de Gestao</h2>
+                <p class="description">Resumo de convidados, confirmacoes e status dos presentes.</p>
+                <button id="refreshBtn" class="secondary-btn" type="button">Atualizar dados</button>
+                <p id="dashboardMessage" class="message" aria-live="polite"></p>
+            </section>
+
+            <section class="card panel tabs-panel">
+                <div class="tabs-nav">
+                    <button id="tabBtnConvidados" class="tab-btn active" type="button">
+                        <span class="tab-icon" aria-hidden="true">👥</span>
+                        Convidados
+                    </button>
+                    <button id="tabBtnPresentes" class="tab-btn" type="button">
+                        <span class="tab-icon" aria-hidden="true">🎁</span>
+                        Presentes
+                    </button>
+                </div>
+
+                <div id="tabConvidados" class="tab-content active">
+                    <h3 class="panel-title">Convidados</h3>
+                    <div class="summary-grid">
+                        <article class="summary-item">
+                            <span class="summary-label">Total confirmados</span>
+                            <strong id="sumTotalConfirmados">-</strong>
+                        </article>
+                        <article class="summary-item">
+                            <span class="summary-label">Menores de 8</span>
+                            <strong id="sumMenores">-</strong>
+                        </article>
+                        <article class="summary-item">
+                            <span class="summary-label">Maiores de 8</span>
+                            <strong id="sumMaiores">-</strong>
+                        </article>
+                    </div>
+                    <div class="filter-box">
+                        <label class="filter-label" for="convidadosSearch">Pesquisar convidado</label>
+                        <input
+                            id="convidadosSearch"
+                            class="filter-input"
+                            type="search"
+                            placeholder="Digite parte do nome"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <ul id="convidadosList" class="data-list"></ul>
+                </div>
+
+                <div id="tabPresentes" class="tab-content">
+                    <h3 class="panel-title">Presentes</h3>
+                    <div class="filter-box">
+                        <label class="filter-label" for="presentesSearch">Pesquisar presente</label>
+                        <input
+                            id="presentesSearch"
+                            class="filter-input"
+                            type="search"
+                            placeholder="Digite parte do nome"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <ul id="presentesList" class="data-list"></ul>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Ajuste esta URL para o endereco publico do seu convite
+        const CONVITE_BASE_URL = "https://lucasfssouzaa.github.io/convite/";
+
+        const SUPABASE_URL = "https://mtwabudrvpdkmayuqfsb.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10d2FidWRydnBka21heXVxZnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMjA4NTYsImV4cCI6MjA4NDU5Njg1Nn0.Mao-afziGNwwtIRR_gYQ2HvmVYa0VT9luutZE2P41kM";
+        const TABELA_CONVIDADOS = "convidados";
+        const TABELA_CONFIRMADOS = "confirmados";
+        const TABELA_PRESENTES = "presentes";
+
+        const supabaseClient = supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
+
+        const PASSWORD_HASH = "62a7722a6980745a3ef86f0c7a14a0216b674dcb49ef898bed75777f61addd94";
+
+        const authForm = document.getElementById("authForm");
+        const pinInput = document.getElementById("pinInput");
+        const authMessage = document.getElementById("authMessage");
+        const authCard = document.getElementById("authCard");
+        const dashboard = document.getElementById("dashboard");
+        const refreshBtn = document.getElementById("refreshBtn");
+        const dashboardMessage = document.getElementById("dashboardMessage");
+        const convidadosList = document.getElementById("convidadosList");
+        const presentesList = document.getElementById("presentesList");
+        const convidadosSearch = document.getElementById("convidadosSearch");
+        const presentesSearch = document.getElementById("presentesSearch");
+        const tabBtnConvidados = document.getElementById("tabBtnConvidados");
+        const tabBtnPresentes = document.getElementById("tabBtnPresentes");
+        const tabConvidados = document.getElementById("tabConvidados");
+        const tabPresentes = document.getElementById("tabPresentes");
+
+        let convidadosCache = [];
+        let confirmadosCache = [];
+        let presentesCache = [];
+
+        function sha256Fallback(ascii) {
+            function rightRotate(value, amount) {
+                return (value >>> amount) | (value << (32 - amount));
+            }
+
+            const maxWord = Math.pow(2, 32);
+            const lengthProperty = "length";
+            let i;
+            let j;
+            const result = [];
+
+            const words = [];
+            const asciiBitLength = ascii[lengthProperty] * 8;
+
+            let hash = (sha256Fallback.h = sha256Fallback.h || []);
+            const k = (sha256Fallback.k = sha256Fallback.k || []);
+            let primeCounter = k[lengthProperty];
+
+            const isComposite = {};
+            for (let candidate = 2; primeCounter < 64; candidate += 1) {
+                if (!isComposite[candidate]) {
+                    for (i = 0; i < 313; i += candidate) {
+                        isComposite[i] = candidate;
+                    }
+                    hash[primeCounter] = (Math.pow(candidate, 0.5) * maxWord) | 0;
+                    k[primeCounter] = (Math.pow(candidate, 1 / 3) * maxWord) | 0;
+                    primeCounter += 1;
+                }
+            }
+
+            ascii += "\x80";
+            while ((ascii[lengthProperty] % 64) - 56) {
+                ascii += "\x00";
+            }
+            for (i = 0; i < ascii[lengthProperty]; i += 1) {
+                j = ascii.charCodeAt(i);
+                words[i >> 2] |= j << (((3 - i) % 4) * 8);
+            }
+            words[words[lengthProperty]] = (asciiBitLength / maxWord) | 0;
+            words[words[lengthProperty]] = asciiBitLength;
+
+            for (j = 0; j < words[lengthProperty];) {
+                const w = words.slice(j, (j += 16));
+                const oldHash = hash.slice(0);
+
+                for (i = 0; i < 64; i += 1) {
+                    const w15 = w[i - 15];
+                    const w2 = w[i - 2];
+
+                    const a = hash[0];
+                    const e = hash[4];
+                    const temp1 =
+                        hash[7] +
+                        (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) +
+                        ((e & hash[5]) ^ (~e & hash[6])) +
+                        k[i] +
+                        (w[i] =
+                            i < 16
+                                ? w[i]
+                                : (w[i - 16] +
+                                      (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3)) +
+                                      w[i - 7] +
+                                      (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) |
+                                  0);
+                    const temp2 =
+                        (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) +
+                        ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+
+                    hash = [(temp1 + temp2) | 0].concat(hash);
+                    hash[4] = (hash[4] + temp1) | 0;
+                    hash.pop();
+                }
+
+                for (i = 0; i < 8; i += 1) {
+                    hash[i] = (hash[i] + oldHash[i]) | 0;
+                }
+            }
+
+            for (i = 0; i < 8; i += 1) {
+                for (j = 3; j + 1; j -= 1) {
+                    const b = (hash[i] >> (j * 8)) & 255;
+                    result.push((b < 16 ? "0" : "") + b.toString(16));
+                }
+            }
+            return result.join("");
+        }
+
+        async function sha256(value) {
+            if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+                const data = new TextEncoder().encode(value);
+                const digest = await window.crypto.subtle.digest("SHA-256", data);
+                return Array.from(new Uint8Array(digest))
+                    .map((byte) => byte.toString(16).padStart(2, "0"))
+                    .join("");
+            }
+            return sha256Fallback(value);
+        }
+
+        function formatarData(iso) {
+            if (!iso) {
+                return "-";
+            }
+            const data = new Date(iso);
+            if (Number.isNaN(data.getTime())) {
+                return "-";
+            }
+            return data.toLocaleString("pt-BR", {
+                dateStyle: "short",
+                timeStyle: "short"
+            });
+        }
+
+        function normalizarTexto(valor) {
+            return String(valor || "")
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .trim();
+        }
+
+        function criarLinkConvite(codigo) {
+            const separador = CONVITE_BASE_URL.includes("?") ? "&" : "?";
+            return `${CONVITE_BASE_URL}${separador}c=${encodeURIComponent(codigo)}`;
+        }
+
+        async function copiarTexto(texto) {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(texto);
+                return true;
+            }
+
+            try {
+                const inputTemporario = document.createElement("textarea");
+                inputTemporario.value = texto;
+                inputTemporario.setAttribute("readonly", "");
+                inputTemporario.style.position = "fixed";
+                inputTemporario.style.left = "-9999px";
+                document.body.appendChild(inputTemporario);
+                inputTemporario.select();
+                const copiou = document.execCommand("copy");
+                document.body.removeChild(inputTemporario);
+                return copiou;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function renderizarResumoConfirmados(confirmados) {
+            const total = confirmados.length;
+            const menores = confirmados.filter((item) => Boolean(item.menorDe8)).length;
+            const maiores = total - menores;
+
+            document.getElementById("sumTotalConfirmados").textContent = String(total);
+            document.getElementById("sumMenores").textContent = String(menores);
+            document.getElementById("sumMaiores").textContent = String(maiores);
+        }
+
+        function renderizarConvidados(convidados, confirmados) {
+            const termo = normalizarTexto(convidadosSearch.value);
+            const confirmadosPorConvidado = confirmados.reduce((acc, item) => {
+                const chave = String(item.convidado_id);
+                acc[chave] = (acc[chave] || 0) + 1;
+                return acc;
+            }, {});
+
+            const convidadosOrdenados = [...convidados]
+                .filter((item) => {
+                    if (!termo) {
+                        return true;
+                    }
+                    return normalizarTexto(item.nome).includes(termo);
+                })
+                .sort((a, b) => String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR"));
+
+            convidadosList.innerHTML = "";
+
+            if (convidadosOrdenados.length === 0) {
+                convidadosList.innerHTML = "<li class='empty-state'>Nenhum convidado encontrado.</li>";
+                return;
+            }
+
+            convidadosOrdenados.forEach((convidado) => {
+                const confirmou = Boolean(convidado.confirmacao);
+                const qtdConfirmados = confirmadosPorConvidado[String(convidado.id)] || 0;
+                const item = document.createElement("li");
+                item.className = "data-row";
+
+                const statusClasse = confirmou ? "badge-ok" : "badge-pending";
+                const statusTexto = confirmou ? "Confirmou" : "Nao confirmou";
+                const dataTexto = confirmou ? formatarData(convidado.dataConfirmacao) : "-";
+                const link = criarLinkConvite(convidado.codigo);
+
+                item.innerHTML = `
+                    <div class="row-main">
+                        <strong class="row-name">${convidado.nome || "-"}</strong>
+                        <span class="badge ${statusClasse}">${statusTexto}</span>
+                    </div>
+                    <div class="row-meta">
+                        <span>Data confirmacao: ${dataTexto}</span>
+                        <span>Pessoas confirmadas neste convite: ${qtdConfirmados}</span>
+                    </div>
+                    <button class="invite-link invite-copy-btn" type="button" data-link="${link}">
+                        Copiar link do convite
+                    </button>
+                `;
+
+                const copyBtn = item.querySelector(".invite-copy-btn");
+                copyBtn.addEventListener("click", async () => {
+                    const textoOriginal = copyBtn.textContent;
+                    copyBtn.disabled = true;
+                    copyBtn.textContent = "Copiando...";
+
+                    const copiou = await copiarTexto(link);
+                    copyBtn.textContent = copiou ? "Link copiado!" : "Falha ao copiar";
+
+                    setTimeout(() => {
+                        copyBtn.textContent = textoOriginal;
+                        copyBtn.disabled = false;
+                    }, 1400);
+                });
+
+                convidadosList.appendChild(item);
+            });
+        }
+
+        function renderizarPresentes(presentes, convidados) {
+            const termo = normalizarTexto(presentesSearch.value);
+            const convidadosPorId = convidados.reduce((acc, convidado) => {
+                acc[String(convidado.id)] = convidado.nome || "Convidado sem nome";
+                return acc;
+            }, {});
+
+            const presentesOrdenados = [...presentes]
+                .filter((item) => {
+                    if (!termo) {
+                        return true;
+                    }
+                    return normalizarTexto(item.nome).includes(termo);
+                })
+                .sort((a, b) => Number(a.id) - Number(b.id));
+            presentesList.innerHTML = "";
+
+            if (presentesOrdenados.length === 0) {
+                presentesList.innerHTML = "<li class='empty-state'>Nenhum presente encontrado.</li>";
+                return;
+            }
+
+            presentesOrdenados.forEach((presente) => {
+                const item = document.createElement("li");
+                item.className = "data-row";
+
+                const reservado = presente.reservado_por !== null && presente.reservado_por !== undefined;
+                const reservadoPor = reservado
+                    ? (convidadosPorId[String(presente.reservado_por)] || `ID ${presente.reservado_por}`)
+                    : "Livre";
+                const statusClasse = reservado ? "badge-ok" : "badge-pending";
+                const statusTexto = reservado ? "Reservado" : "Disponivel";
+
+                item.innerHTML = `
+                    <div class="row-main">
+                        <strong class="row-name">${presente.nome || `Presente #${presente.id}`}</strong>
+                        <span class="badge ${statusClasse}">${statusTexto}</span>
+                    </div>
+                    <div class="row-meta">
+                        <span>Reservado por: ${reservadoPor}</span>
+                        <span>Data da reserva: ${formatarData(presente.data_reserva)}</span>
+                    </div>
+                `;
+
+                presentesList.appendChild(item);
+            });
+        }
+
+        function renderizarListasComFiltro() {
+            renderizarConvidados(convidadosCache, confirmadosCache);
+            renderizarPresentes(presentesCache, convidadosCache);
+        }
+
+        function selecionarAba(nomeAba) {
+            const convidadosAtivo = nomeAba === "convidados";
+
+            tabBtnConvidados.classList.toggle("active", convidadosAtivo);
+            tabBtnPresentes.classList.toggle("active", !convidadosAtivo);
+            tabConvidados.classList.toggle("active", convidadosAtivo);
+            tabPresentes.classList.toggle("active", !convidadosAtivo);
+        }
+
+        async function carregarPainelGestao() {
+            dashboardMessage.textContent = "Carregando dados...";
+            refreshBtn.disabled = true;
+
+            try {
+                const [
+                    convidadosResp,
+                    confirmadosResp,
+                    presentesResp
+                ] = await Promise.all([
+                    supabaseClient
+                        .from(TABELA_CONVIDADOS)
+                        .select("id, nome, codigo, confirmacao, dataConfirmacao"),
+                    supabaseClient
+                        .from(TABELA_CONFIRMADOS)
+                        .select("convidado_id, menorDe8"),
+                    supabaseClient
+                        .from(TABELA_PRESENTES)
+                        .select("id, nome, reservado_por, data_reserva")
+                ]);
+
+                if (convidadosResp.error) {
+                    throw convidadosResp.error;
+                }
+                if (confirmadosResp.error) {
+                    throw confirmadosResp.error;
+                }
+                if (presentesResp.error) {
+                    throw presentesResp.error;
+                }
+
+                convidadosCache = convidadosResp.data || [];
+                confirmadosCache = confirmadosResp.data || [];
+                presentesCache = presentesResp.data || [];
+
+                renderizarResumoConfirmados(confirmadosCache);
+                renderizarListasComFiltro();
+                dashboardMessage.textContent = "Dados atualizados com sucesso.";
+            } catch (error) {
+                console.error("Falha ao carregar painel:", error);
+                dashboardMessage.textContent = "Nao foi possivel carregar os dados. Tente novamente.";
+            } finally {
+                refreshBtn.disabled = false;
+            }
+        }
+
+        authForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            authMessage.textContent = "";
+
+            const pin = pinInput.value.trim();
+            if (!/^\d{4}$/.test(pin)) {
+                authMessage.textContent = "Informe exatamente 4 digitos.";
+                return;
+            }
+
+            const hashedPin = await sha256(pin);
+            if (hashedPin !== PASSWORD_HASH) {
+                authMessage.textContent = "Senha invalida. Tente novamente.";
+                return;
+            }
+
+            authCard.classList.add("hidden");
+            dashboard.classList.remove("hidden");
+            pinInput.value = "";
+            await carregarPainelGestao();
+        });
+
+        refreshBtn.addEventListener("click", carregarPainelGestao);
+        convidadosSearch.addEventListener("input", renderizarListasComFiltro);
+        presentesSearch.addEventListener("input", renderizarListasComFiltro);
+        tabBtnConvidados.addEventListener("click", () => selecionarAba("convidados"));
+        tabBtnPresentes.addEventListener("click", () => selecionarAba("presentes"));
+    </script>
+</body>
+</html>
