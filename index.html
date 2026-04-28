@@ -95,7 +95,7 @@
                         Lucas e Dayane</p>
                 </div>
                 
-                <div class="section" id="save-date">
+                <div class="section" id="save-date" style="margin: 0 -24px;">
                     <h2 class="titulo">Save the Date</h2>
                     <div class="save-date-card">
                         <div class="save-date-icon">
@@ -189,6 +189,19 @@
 
                     <h2 class="titulo" style="margin-top: 20px;">Sugestões de Presentes</h2>
                     <p>Se quiser nos presentear com algo, aqui estão algumas sugestões:</p>
+                    <div class="sugestoes-toolbar">
+                        <div class="sugestoes-sort" id="sugestoesSort">
+                            <button type="button" class="sugestoes-sort-btn" id="sugestoesSortBtn" aria-expanded="false">
+                                Ordenar <span class="material-symbols-outlined">arrow_drop_down</span>
+                            </button>
+                            <div class="sugestoes-sort-menu" id="sugestoesSortMenu">
+                                <button type="button" class="sugestoes-sort-option" data-sort="nome-asc">Nome A-Z</button>
+                                <button type="button" class="sugestoes-sort-option" data-sort="nome-desc">Nome Z-A</button>
+                                <button type="button" class="sugestoes-sort-option" data-sort="preco-asc">Menor Preço</button>
+                                <button type="button" class="sugestoes-sort-option" data-sort="preco-desc">Maior Preço</button>
+                            </div>
+                        </div>
+                    </div>
                     <div id="gridSugestoes" class="grid-sugestoes"></div>
                 </div>
                 
@@ -650,6 +663,11 @@ async function cancelarConfirmacaoPresenca() {
 const TABELA_PRESENTES = "presentes";
 const TABELA_NOTIFICACOES = "notificacoes";
 let sugestoesCache = [];
+let ordenacaoSugestoesSelecionada = null;
+
+const sugestoesSortContainer = document.getElementById("sugestoesSort");
+const sugestoesSortBtn = document.getElementById("sugestoesSortBtn");
+const sugestoesSortOptions = [...document.querySelectorAll(".sugestoes-sort-option")];
 
 function idsIguais(a, b) {
     if (a === null || a === undefined || b === null || b === undefined) {
@@ -700,6 +718,10 @@ function montarOverlayReservaCard(sugestao) {
 }
 
 function ordenarSugestoesPorPrioridade(sugestoes) {
+    if (ordenacaoSugestoesSelecionada) {
+        return ordenarSugestoesPorFiltro(sugestoes, ordenacaoSugestoesSelecionada);
+    }
+
     return [...sugestoes].sort((a, b) => {
         const grupoA = !a.reservado_por
             ? 1
@@ -712,8 +734,45 @@ function ordenarSugestoesPorPrioridade(sugestoes) {
             return grupoA - grupoB;
         }
 
-        return Number(a.id) - Number(b.id);
+        return compararSugestoesPorNome(a, b);
     });
+}
+
+function compararSugestoesPorNome(a, b) {
+    return String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR");
+}
+
+function precoNumericoSugestao(sugestao) {
+    const preco = Number(sugestao.preco);
+    return Number.isFinite(preco) ? preco : 0;
+}
+
+function ordenarSugestoesPorFiltro(sugestoes, tipoOrdenacao) {
+    const lista = [...sugestoes];
+
+    if (tipoOrdenacao === "nome-asc") {
+        return lista.sort(compararSugestoesPorNome);
+    }
+
+    if (tipoOrdenacao === "nome-desc") {
+        return lista.sort((a, b) => compararSugestoesPorNome(b, a));
+    }
+
+    if (tipoOrdenacao === "preco-asc") {
+        return lista.sort((a, b) => {
+            const diff = precoNumericoSugestao(a) - precoNumericoSugestao(b);
+            return diff !== 0 ? diff : compararSugestoesPorNome(a, b);
+        });
+    }
+
+    if (tipoOrdenacao === "preco-desc") {
+        return lista.sort((a, b) => {
+            const diff = precoNumericoSugestao(b) - precoNumericoSugestao(a);
+            return diff !== 0 ? diff : compararSugestoesPorNome(a, b);
+        });
+    }
+
+    return lista;
 }
 
 function renderizarSugestoes() {
@@ -904,11 +963,34 @@ async function carregarSugestoes() {
         return;
     }
 
-    sugestoesCache = ordenarSugestoesPorPrioridade(data);
+    sugestoesCache = data || [];
     renderizarSugestoes();
 }
 
 carregarSugestoes();
+
+if (sugestoesSortBtn && sugestoesSortContainer) {
+    sugestoesSortBtn.addEventListener("click", () => {
+        const aberto = sugestoesSortContainer.classList.toggle("aberto");
+        sugestoesSortBtn.setAttribute("aria-expanded", aberto ? "true" : "false");
+    });
+
+    sugestoesSortOptions.forEach((option) => {
+        option.addEventListener("click", () => {
+            ordenacaoSugestoesSelecionada = option.dataset.sort || null;
+            renderizarSugestoes();
+            sugestoesSortContainer.classList.remove("aberto");
+            sugestoesSortBtn.setAttribute("aria-expanded", "false");
+        });
+    });
+
+    document.addEventListener("click", (event) => {
+        if (!sugestoesSortContainer.contains(event.target)) {
+            sugestoesSortContainer.classList.remove("aberto");
+            sugestoesSortBtn.setAttribute("aria-expanded", "false");
+        }
+    });
+}
 
 async function getIDConvidado() {
 
