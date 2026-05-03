@@ -347,6 +347,14 @@
         box-shadow: 0 4px 10px rgba(0,0,0,.1);
         color: var(--azul-escuro);
     }
+
+    .pix-wrapper {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
     
     .pix-top {
         display: flex;
@@ -1114,6 +1122,16 @@
 
         #save-date h2{
             font-size:38px;
+        }
+
+        .pix-wrapper {
+            gap: 10px;
+        }
+
+        .pix {
+            width: 100%;
+            max-width: 360px;
+            padding: 20px 18px;
         }
 
         .sugestoes-toolbar {
