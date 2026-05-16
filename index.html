@@ -98,9 +98,16 @@
                 <div class="section" id="save-date" style="margin: 0 -24px;">
                     <h2 class="titulo">Save the Date</h2>
                     <div class="save-date-card">
-                        <div class="save-date-icon">
+                        <a
+                            id="addCalendarLink"
+                            class="save-date-icon save-date-icon-clickable"
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Adicionar casamento Lucas e Day ao calendário"
+                        >
                             <i class="fa-solid fa-calendar-days"></i>
-                        </div>
+                        </a>
                         <div class="save-date-date-layout">
                             <p class="save-date-block save-date-weekday">Sábado</p>
                             <span class="save-date-separator" aria-hidden="true"></span>
@@ -213,7 +220,12 @@
                     </div>
 
                     <h2 class="titulo" style="margin-top: 20px;">Sugestões de Presentes</h2>
-                    <p>Se quiser nos presentear com algo, aqui estão algumas sugestões:</p>
+                    <p>Se quiser nos presentear com algo, aqui estão algumas sugestões:</p><br><br>
+                    <p>Caso deseje enviar o presente diretamente para nós, utilize o endereço abaixo para entrega:</p>
+                    <p>CEP: 04243-000</p>
+                    <p>Av. Patente, 193</p>
+                    <p>Complemento: Bloco A1 Apto 13</p>
+                    <p>Jardim Patente - SP</p>
                     <div class="sugestoes-toolbar">
                         <div class="sugestoes-sort" id="sugestoesSort">
                             <button type="button" class="sugestoes-sort-btn" id="sugestoesSortBtn" aria-expanded="false">
@@ -387,6 +399,29 @@ setInterval(()=>{
 const SUPABASE_URL = "https://mtwabudrvpdkmayuqfsb.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10d2FidWRydnBka21heXVxZnNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMjA4NTYsImV4cCI6MjA4NDU5Njg1Nn0.Mao-afziGNwwtIRR_gYQ2HvmVYa0VT9luutZE2P41kM";
 
+function formatarDataGoogleCalendar(data) {
+    const ano = data.getUTCFullYear();
+    const mes = String(data.getUTCMonth() + 1).padStart(2, "0");
+    const dia = String(data.getUTCDate()).padStart(2, "0");
+    const horas = String(data.getUTCHours()).padStart(2, "0");
+    const minutos = String(data.getUTCMinutes()).padStart(2, "0");
+    const segundos = String(data.getUTCSeconds()).padStart(2, "0");
+    return `${ano}${mes}${dia}T${horas}${minutos}${segundos}Z`;
+}
+
+function criarLinkAdicionarNoCalendario() {
+    const inicioEvento = new Date("2026-11-14T12:00:00-03:00");
+    const fimEvento = new Date("2026-11-14T19:00:00-03:00");
+    const parametros = new URLSearchParams({
+        action: "TEMPLATE",
+        text: "casamento Lucas e Day",
+        dates: `${formatarDataGoogleCalendar(inicioEvento)}/${formatarDataGoogleCalendar(fimEvento)}`,
+        ctz: "America/Sao_Paulo"
+    });
+
+    return `https://calendar.google.com/calendar/render?${parametros.toString()}`;
+}
+
 const supabaseClient = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
@@ -399,8 +434,13 @@ const nomeEl = document.getElementById("nomeConvidado");
 const infoEl = document.getElementById("info");
 const info2El = document.getElementById("info2");
 const btnConfirmar = document.getElementById("btnConfirmar");
+const addCalendarLink = document.getElementById("addCalendarLink");
 let convidadoAtual = null;
 let idConvidadoAtual = null;
+
+if (addCalendarLink) {
+    addCalendarLink.href = criarLinkAdicionarNoCalendario();
+}
 
 if (!convidadoId) {
     nomeEl.innerText = "Convite inválido";
